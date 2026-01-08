@@ -9,7 +9,7 @@
         </p>
       </div>
 
-      <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4 mobile-cards-vertical">
         <UiCard title="Период" subtitle="Наблюдение и план до даты старта">
           <div class="grid grid-cols-2 gap-3">
             <Field label="Недели наблюдения">
@@ -618,6 +618,13 @@ onMounted(() => {
 </script>
 
 <style scoped>
+@media (max-width: 767px) {
+  .mobile-cards-vertical {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 1.25rem !important;
+  }
+}
 .input {
   width: 100%;
   border: 1px solid #e2e8f0;
