@@ -65,8 +65,13 @@
               Скачать PDF (план + график)
             </button>
           </div>
-          <div v-if="!competitionDate" class="mt-3 text-xs text-slate-600">
-            Укажите <b>дату соревнований</b>, чтобы активировать расчёт.
+          <div v-if="!canModel" class="mt-3 text-xs text-slate-600 space-y-1">
+            <div v-if="!competitionDate">
+              Укажите <b>дату соревнований</b>, чтобы активировать расчёт.
+            </div>
+            <div v-else-if="!hasFilledData">
+              <b>Заполните данные по неделям</b> (хотя бы одну тренировку: V, P, R) в разделе "Ввод данных по неделям" ниже.
+            </div>
           </div>
           <div v-if="plan" class="mt-3 text-xs text-slate-600">
             Сформировано недель: <b>{{ plan.weeks.length }}</b>, тренировок: <b>{{ flatPlan.length }}</b>
@@ -271,7 +276,13 @@ const competitionDate = ref<string>('')
 // Дата начала плана (по умолчанию сегодня). От неё и до competitionDate строится план.
 const startDate = ref<string>(new Date().toISOString().slice(0, 10))
 
-const canModel = computed(() => Boolean(competitionDate.value && startDate.value))
+const hasFilledData = computed(() => {
+  return Object.values(rows.value).some(isFilled)
+})
+
+const canModel = computed(() => {
+  return Boolean(competitionDate.value && startDate.value && hasFilledData.value)
+})
 
 const planWeeks = computed(() => {
   if (!competitionDate.value || !startDate.value) return 0

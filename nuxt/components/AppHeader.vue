@@ -64,7 +64,7 @@ const closeSidebar = () => { sidebarOpen.value = false }
 }
 @media (min-width: 600px) {
   .header {
-    padding: 16px 24px;
+  padding: 16px 24px;
   }
 }
 .logo {
