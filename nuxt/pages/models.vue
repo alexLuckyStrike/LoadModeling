@@ -8,7 +8,9 @@ const error = ref(false)
 onMounted(async () => {
   try {
     const res = await fetch('http://localhost:3001/api/notes/models')
+    console.log("res:",res)
     const data = await res.json()
+    console.log("data:",data)
     content.value = data.content
   } catch (e) {
     error.value = true

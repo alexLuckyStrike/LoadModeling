@@ -12,9 +12,9 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 const NOTES_DIR = path.join(__dirname, 'content', 'notes');
 
 // unified endpoint for Nuxt BFF
-app.get('/content/:slug', (req, res) => {
-  console.log("backend!!!",)
-  const file = path.join(NOTES_DIR, `${req.params.slug}.md`);
+app.get('/content/:plug', (req, res) => {
+  console.log("content", req.params)
+  const file = path.join(NOTES_DIR, `${req.params.plug}.md`);
   if (!fs.existsSync(file)) {
     return res.status(404).json({ error: 'Not found' });
   }
@@ -24,7 +24,7 @@ app.get('/content/:slug', (req, res) => {
 
 // legacy endpoint (kept)
 app.get('/api/notes/:name', (req, res) => {
-  console.log("hello")
+  console.log("notes:", req.params)
   const file = path.join(NOTES_DIR, `${req.params.name}.md`);
   if (!fs.existsSync(file)) {
     return res.status(404).json({ error: 'Not found' });
