@@ -1,7 +1,7 @@
 import { defineNuxtConfig } from 'nuxt/config'
 
 export default defineNuxtConfig({
-  ssr: false, // SPA mode (nuxt-router)
+  ssr: true, // SPA mode (nuxt-router)
   css: ['~/assets/main.scss'],
   typescript: { strict: true },
   runtimeConfig: {

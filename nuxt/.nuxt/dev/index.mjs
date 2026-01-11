@@ -1590,7 +1590,7 @@ function createSSRContext(event) {
     url: event.path,
     event,
     runtimeConfig: useRuntimeConfig(event),
-    noSSR: true,
+    noSSR: event.context.nuxt?.noSSR || (false),
     head: createHead(unheadOptions),
     error: false,
     nuxt: void 0,
@@ -1621,7 +1621,7 @@ function publicAssetsURL(...path) {
 
 const APP_ROOT_OPEN_TAG = `<${appRootTag}${propsToString(appRootAttrs)}>`;
 const APP_ROOT_CLOSE_TAG = `</${appRootTag}>`;
-const getServerEntry = () => Promise.resolve().then(function () { return server$1; }).then((r) => r.default || r);
+const getServerEntry = () => import('file:///Users/admin/Desktop/powerlift-nuxt-spa-v6-final-auth-modal-nav-fixed/nuxt/.nuxt//dist/server/server.mjs').then((r) => r.default || r);
 const getClientManifest = () => import('file:///Users/admin/Desktop/powerlift-nuxt-spa-v6-final-auth-modal-nav-fixed/nuxt/.nuxt//dist/server/client.manifest.mjs').then((r) => r.default || r).then((r) => typeof r === "function" ? r() : r);
 const getSSRRenderer = lazyCachedFunction(async () => {
   const createSSRApp = await getServerEntry();
@@ -1687,7 +1687,7 @@ function lazyCachedFunction(fn) {
   };
 }
 function getRenderer(ssrContext) {
-  return getSPARenderer() ;
+  return ssrContext.noSSR ? getSPARenderer() : getSSRRenderer();
 }
 const getSSRStyles = lazyCachedFunction(() => Promise.resolve().then(function () { return styles$1; }).then((r) => r.default || r));
 
@@ -1868,8 +1868,8 @@ async function getIslandContext(event) {
   return ctx;
 }
 
-const _lazy_utPQat = () => Promise.resolve().then(function () { return content_get$1; });
-const _lazy_6ymEw9 = () => Promise.resolve().then(function () { return _slug__get$1; });
+const _lazy_utPQat = () => Promise.resolve().then(function () { return content_get; });
+const _lazy_6ymEw9 = () => Promise.resolve().then(function () { return _slug__get; });
 const _lazy_pXeBuF = () => Promise.resolve().then(function () { return pdf_post$1; });
 const _lazy_0Ia3bK = () => Promise.resolve().then(function () { return renderer$1; });
 
@@ -2111,7 +2111,7 @@ parentPort?.on("message", (msg) => {
   }
 });
 const nitroApp = useNitroApp();
-const server$2 = new Server(toNodeListener(nitroApp.h3App));
+const server = new Server(toNodeListener(nitroApp.h3App));
 let listener;
 listen().catch(() => listen(
   true
@@ -2151,8 +2151,8 @@ function listen(useRandomPort = Boolean(
 )) {
   return new Promise((resolve, reject) => {
     try {
-      listener = server$2.listen(useRandomPort ? 0 : getSocketAddress(), () => {
-        const address = server$2.address();
+      listener = server.listen(useRandomPort ? 0 : getSocketAddress(), () => {
+        const address = server.address();
         parentPort?.postMessage({
           event: "listen",
           address: typeof address === "string" ? { socketPath: address } : { host: "localhost", port: address?.port }
@@ -2178,7 +2178,7 @@ function getSocketAddress() {
   return join(tmpdir(), socketName);
 }
 async function shutdown() {
-  server$2.closeAllConnections?.();
+  server.closeAllConnections?.();
   await Promise.all([
     new Promise((resolve) => listener?.close(resolve)),
     nitroApp.hooks.callHook("close").catch(console.error)
@@ -2197,13 +2197,6 @@ const error500 = /*#__PURE__*/Object.freeze(/*#__PURE__*/Object.defineProperty({
   template: template$1
 }, Symbol.toStringTag, { value: 'Module' }));
 
-const server = () => {};
-
-const server$1 = /*#__PURE__*/Object.freeze(/*#__PURE__*/Object.defineProperty({
-  __proto__: null,
-  default: server
-}, Symbol.toStringTag, { value: 'Module' }));
-
 const template = "";
 
 const _virtual__spaTemplate = /*#__PURE__*/Object.freeze(/*#__PURE__*/Object.defineProperty({
@@ -2218,27 +2211,12 @@ const styles$1 = /*#__PURE__*/Object.freeze(/*#__PURE__*/Object.defineProperty({
   default: styles
 }, Symbol.toStringTag, { value: 'Module' }));
 
-const content_get = defineEventHandler(async () => {
-  const config = useRuntimeConfig();
-  const base = config.public.backendBase || "http://localhost:3001";
-  return await $fetch(`${base}/content`);
-});
-
-const content_get$1 = /*#__PURE__*/Object.freeze(/*#__PURE__*/Object.defineProperty({
-  __proto__: null,
-  default: content_get
+const content_get = /*#__PURE__*/Object.freeze(/*#__PURE__*/Object.defineProperty({
+  __proto__: null
 }, Symbol.toStringTag, { value: 'Module' }));
 
-const _slug__get = defineEventHandler(async (event) => {
-  const slug = getRouterParam(event, "slug") || "";
-  const config = useRuntimeConfig();
-  const base = config.public.backendBase || "http://localhost:3001";
-  return await $fetch(`${base}/content/${encodeURIComponent(slug)}`);
-});
-
-const _slug__get$1 = /*#__PURE__*/Object.freeze(/*#__PURE__*/Object.defineProperty({
-  __proto__: null,
-  default: _slug__get
+const _slug__get = /*#__PURE__*/Object.freeze(/*#__PURE__*/Object.defineProperty({
+  __proto__: null
 }, Symbol.toStringTag, { value: 'Module' }));
 
 const pdf_post = defineEventHandler(async (event) => {
@@ -2281,7 +2259,7 @@ function renderPayloadJsonScript(opts) {
     "type": "application/json",
     "innerHTML": contents,
     "data-nuxt-data": appId,
-    "data-ssr": false
+    "data-ssr": !(opts.ssrContext.noSSR)
   };
   {
     payload.id = "__NUXT_DATA__";
@@ -2339,7 +2317,7 @@ const renderer = defineRenderHandler(async (event) => {
   if (routeOptions.ssr === false) {
     ssrContext.noSSR = true;
   }
-  const renderer = await getRenderer();
+  const renderer = await getRenderer(ssrContext);
   const _rendered = await renderer.renderToString(ssrContext).catch(async (error) => {
     if (ssrContext._renderResponse && error.message === "skipping render") {
       return {};
