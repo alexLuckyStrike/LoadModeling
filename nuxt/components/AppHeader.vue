@@ -11,7 +11,7 @@ const closeSidebar = () => { sidebarOpen.value = false }
 <template>
   <header class="header">
     <div class="logo">
-      <strong>Модель управления нагрузкой</strong>
+      <strong>Модель управления нагрузкой:</strong>
       <span class="subtitle">логарифмическая регрессия · биомаркеры мочи</span>
     </div>
     <!-- burger button (mobile only) -->
