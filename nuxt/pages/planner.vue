@@ -59,10 +59,10 @@
               class="h-10 px-3 rounded-xl bg-slate-900 text-white font-medium hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed"
               @click="model"
             >
-              Получить модель тренировочного плана
+              Получить 3 варианта тренировочного плана
             </button>
-            <button :disabled="!plan" class="h-10 px-3 rounded-xl bg-emerald-600 text-white font-medium hover:bg-emerald-500 disabled:opacity-50" @click="exportPdf">
-              Скачать PDF (план + график)
+            <button :disabled="!activePlan" class="h-10 px-3 rounded-xl bg-emerald-600 text-white font-medium hover:bg-emerald-500 disabled:opacity-50" @click="exportPdf">
+              Скачать PDF (выбранный план + график)
             </button>
           </div>
           <div v-if="!canModel" class="mt-3 text-xs text-slate-600 space-y-1">
@@ -73,8 +73,21 @@
               <b>Заполните данные по неделям</b> (хотя бы одну тренировку: V, P, R) в разделе "Ввод данных по неделям" ниже.
             </div>
           </div>
-          <div v-if="plan" class="mt-3 text-xs text-slate-600">
-            Сформировано недель: <b>{{ plan.weeks.length }}</b>, тренировок: <b>{{ flatPlan.length }}</b>
+          <div v-if="activePlan" class="mt-3 text-xs text-slate-600 space-y-2">
+            <div>
+              Вариант: <b>{{ activeVariant?.title }}</b> · недель: <b>{{ activePlan.weeks.length }}</b> · тренировок: <b>{{ flatPlan.length }}</b>
+            </div>
+            <div class="flex gap-2 flex-wrap">
+              <button
+                v-for="v in planVariants"
+                :key="v.id"
+                class="px-3 py-2 rounded-xl border text-sm hover:bg-slate-50"
+                :class="activePlanId === v.id ? 'bg-slate-100 border-slate-200' : ''"
+                @click="selectPlan(v.id)"
+              >
+                {{ v.title }}
+              </button>
+            </div>
           </div>
         </UiCard>
 
@@ -172,32 +185,61 @@
       <div class="space-y-6 w-full">
         <div class="grid gap-6 lg:grid-cols-3">
           <UiCard title="Динамика объёма" subtitle="V (кг) по всем тренировкам">
-            <div v-if="!plan" class="text-slate-600 text-sm">Сначала получите модель тренировочного плана.</div>
+            <div v-if="!activePlan" class="text-slate-600 text-sm">Сначала получите варианты тренировочного плана.</div>
             <div v-else class="relative h-64 max-h-64 w-full">
               <canvas ref="chartVEl" class="absolute inset-0 w-full h-full" />
             </div>
           </UiCard>
 
           <UiCard title="Динамика подъёмов" subtitle="P (раз) по всем тренировкам">
-            <div v-if="!plan" class="text-slate-600 text-sm">Сначала получите модель тренировочного плана.</div>
+            <div v-if="!activePlan" class="text-slate-600 text-sm">Сначала получите варианты тренировочного плана.</div>
             <div v-else class="relative h-64 max-h-64 w-full">
               <canvas ref="chartPEl" class="absolute inset-0 w-full h-full" />
             </div>
           </UiCard>
 
           <UiCard title="Динамика пауз" subtitle="R (мин) по всем тренировкам">
-            <div v-if="!plan" class="text-slate-600 text-sm">Сначала получите модель тренировочного плана.</div>
+            <div v-if="!activePlan" class="text-slate-600 text-sm">Сначала получите варианты тренировочного плана.</div>
             <div v-else class="relative h-64 max-h-64 w-full">
               <canvas ref="chartREl" class="absolute inset-0 w-full h-full" />
             </div>
           </UiCard>
         </div>
 
+        <UiCard title="Пояснение выбранного плана" subtitle="Подробная математика + ссылки на постулаты">
+          <div v-if="!activePlan" class="text-slate-600 text-sm">Сначала получите варианты тренировочного плана.</div>
+          <div v-else class="prose max-w-none">
+            <div class="font-medium text-slate-900">{{ activeVariant?.title }}</div>
+            <div class="mt-2" v-html="activeVariant?.explanationHtml" />
+          </div>
+        </UiCard>
+
+        <UiCard title="4 постулата управления нагрузкой" subtitle="Якоря для ссылок из пояснений">
+          <div class="text-sm text-slate-700 space-y-3">
+            <div :id="postulateIds.p1">
+              <div class="font-medium text-slate-900">Постулат 1 — Индивидуальная чувствительность</div>
+              <div class="text-slate-600">Абсолютная величина коэффициентов |b| показывает, какой параметр V/P/R сильнее влияет на маркер у конкретного спортсмена.</div>
+            </div>
+            <div :id="postulateIds.p2">
+              <div class="font-medium text-slate-900">Постулат 2 — Скорость изменения маркеров</div>
+              <div class="text-slate-600">Лог-модель позволяет интерпретировать b как относительные изменения; %ΔY ≈ (exp(b)−1)·100%.</div>
+            </div>
+            <div :id="postulateIds.p3">
+              <div class="font-medium text-slate-900">Постулат 3 — Приоритет коррекции</div>
+              <div class="text-slate-600">При выходе маркера из зоны корректируем параметр с наибольшим |b| и минимальной практической стоимостью (часто R).</div>
+            </div>
+            <div :id="postulateIds.p4">
+              <div class="font-medium text-slate-900">Постулат 4 — Компенсация параметров</div>
+              <div class="text-slate-600">Изменения V/P/R могут компенсировать друг друга: b1·ΔV + b2·ΔP + b3·ΔR ≈ 0.</div>
+            </div>
+          </div>
+        </UiCard>
+
         <UiCard title="План" subtitle="Красивое отображение микроциклов">
-          <div v-if="!plan" class="text-slate-600 text-sm">После получения модели здесь появится план микроциклов.</div>
+          <div v-if="!activePlan" class="text-slate-600 text-sm">После получения вариантов здесь появится выбранный план микроциклов.</div>
 
           <div v-else class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            <div v-for="(w, idx) in plan.weeks" :key="w.week" class="rounded-2xl border p-4">
+            <div v-for="(w, idx) in activePlan.weeks" :key="w.week" class="rounded-2xl border p-4">
               <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                 <div>
                   <div class="font-semibold">Неделя {{ w.week }}</div>
@@ -234,6 +276,7 @@ import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import UiCard from '~/components/UiCard.vue'
 import Field from '~/components/UiField.vue'
 import Chart from 'chart.js/auto'
+import { olsFit } from '~/utils/ols'
 
 type Row = {
   V: number | null
@@ -268,6 +311,209 @@ type Plan = {
   competitionDate?: string
   weeks: PlannedWeek[]
 }
+
+type MarkerKey = 'creatinine' | 'protein' | 'myoglobin'
+type Coeffs = { b0: number; b1: number; b2: number; b3: number }
+
+type VariantSettings = {
+  /** global scaling for V */
+  V: number
+  /** global scaling for P */
+  P: number
+  /** wave amplitude multiplier */
+  wave: number
+  /** which marker is used as control target when solving ΔR */
+  control: MarkerKey
+  /** shift of target in ln-space */
+  targetShiftLn: number
+  /** amplitude of target wave in ln-space */
+  targetWaveLn: number
+  /** clamp range for R (minutes) */
+  rMin: number
+  rMax: number
+}
+
+type PlanVariantId = 'balanced' | 'volume' | 'intensity'
+type PlanVariant = {
+  id: PlanVariantId
+  title: string
+  subtitle: string
+  explanationHtml: string
+}
+
+const postulateIds = {
+  p1: 'postulate-1',
+  p2: 'postulate-2',
+  p3: 'postulate-3',
+  p4: 'postulate-4',
+} as const
+
+const planVariants: PlanVariant[] = [
+  {
+    id: 'balanced',
+    title: 'План A — Сбалансированный',
+    subtitle: 'Умеренная вариативность V/P/R без перекосов',
+    explanationHtml: `
+<h3>1) Что мы считаем «моделью» плана</h3>
+<p>
+Вариант плана — это не просто таблица тренировок, а правило, как из базовой нагрузки (из периода наблюдения) получить последовательность
+микроциклов до даты старта, сохраняя согласованность V/P/R через уравнение регрессии.
+Смысл: <b>входы</b> (V, P, R) задают нагрузку, <b>выход</b> — прогнозируемый физиологический отклик (маркер Y).
+</p>
+
+<h3>2) Базовый уровень (точка отсчёта)</h3>
+<p>
+Из введённых недель наблюдения мы берём средние значения параметров нагрузки:
+</p>
+<div class="formula-block">
+V<sub>0</sub>=mean(V),&nbsp; P<sub>0</sub>=mean(P),&nbsp; R<sub>0</sub>=mean(R)
+</div>
+<p>
+И базовый уровень маркера (для выбранного контрольного маркера):
+</p>
+<div class="formula-block">
+Y<sub>0</sub>=mean(Y),&nbsp; \u03BB<sub>0</sub>=ln(Y<sub>0</sub>)
+</div>
+
+<h3>3) Нормировка изменений (Δ)</h3>
+<p>
+Чтобы работать с относительными изменениями (и корректно читать %‑эффекты), используем относительные приращения:
+</p>
+<div class="formula-block">
+\u0394V=(V-V<sub>0</sub>)/V<sub>0</sub>,&nbsp;
+\u0394P=(P-P<sub>0</sub>)/P<sub>0</sub>,&nbsp;
+\u0394R=(R-R<sub>0</sub>)/R<sub>0</sub>
+</div>
+<p>
+Это напрямую связано с <a href="#${postulateIds.p2}">Постулатом 2</a> (скорость изменения маркеров в %).
+</p>
+
+<h3>4) Регрессионная связь «нагрузка \u2192 маркер»</h3>
+<p>
+Мы используем логарифмическую множественную регрессию:
+</p>
+<div class="formula-block">
+ln(Y)=b<sub>0</sub>+b<sub>1</sub>\u0394V+b<sub>2</sub>\u0394P+b<sub>3</sub>\u0394R
+</div>
+<p>
+Коэффициенты b отражают индивидуальную чувствительность спортсмена:
+см. <a href="#${postulateIds.p1}">Постулат 1</a>.
+</p>
+
+<h3>5) Как из этого получается план (ключевой вывод)</h3>
+<p>
+План строится так: мы <b>задаём желаемые</b> \u0394V и \u0394P (по типу недели: объём/интенсивность/восстановление/пик),
+а \u0394R вычисляем как компенсирующую поправку, чтобы удерживать контрольный маркер в запланированном коридоре.
+Это прямое применение <a href="#${postulateIds.p4}">Постулата 4</a>.
+</p>
+<div class="formula-block">
+\u0394R = ( ln(Y<sup>*</sup>) - b<sub>0</sub> - b<sub>1</sub>\u0394V - b<sub>2</sub>\u0394P ) / b<sub>3</sub>
+</div>
+<p>
+Где Y<sup>*</sup> — целевое значение маркера на конкретную тренировку/неделю (в этом плане оно «мягко колеблется» вокруг Y<sub>0</sub>).
+Далее восстанавливаем паузу:
+</p>
+<div class="formula-block">
+R = R<sub>0</sub>\u22c5(1+\u0394R)
+</div>
+<p>
+При выходе за допустимые пределы проще всего корректировать именно R (см. <a href="#${postulateIds.p3}">Постулат 3</a>).
+</p>
+
+<h3>6) Чем этот план отличается от других</h3>
+<ul>
+  <li><b>Сбалансированный</b>: умеренные изменения \u0394V и \u0394P, цель — ровная управляемая динамика без «перекосов».</li>
+  <li>Вариативность присутствует, но приоритет — стабильность и предсказуемость.</li>
+</ul>
+`,
+  },
+  {
+    id: 'volume',
+    title: 'План B — Объёмный',
+    subtitle: 'Акцент на V (тоннаж) при контролируемых паузах',
+    explanationHtml: `
+<h3>1) Идея плана</h3>
+<p>
+Цель — дать больший тренировочный стимул через рост объёма V (и умеренно через структуру P),
+но не «вылететь» по биохимическому отклику. Управляем это через расчёт пауз R из уравнения.
+</p>
+
+<h3>2) Управляющие приоритеты</h3>
+<ul>
+  <li><b>Основной рычаг</b>: \u0394V выше, чем в других планах.</li>
+  <li><b>Компенсация</b>: \u0394R подбирается так, чтобы контрольный маркер не уходил в опасную зону (<a href="#${postulateIds.p4}">Постулат 4</a>).</li>
+  <li><b>Почему это работает</b>: если спортсмен чувствителен к V (|b<sub>1</sub>| велик), то небольшое изменение V даёт заметный эффект по Y (<a href="#${postulateIds.p1}">Постулат 1</a>).</li>
+</ul>
+
+<h3>3) Формулы (как именно считаем)</h3>
+<p>
+Мы задаём «более высокий» профиль \u0394V(t) по микроциклам. Например, для объёмной недели:
+</p>
+<div class="formula-block">
+\u0394V(t) \u2191,&nbsp; \u0394P(t) \u2191 (умеренно),&nbsp; затем \u0394R(t) = ( ln(Y<sup>*</sup>) - b<sub>0</sub> - b<sub>1</sub>\u0394V - b<sub>2</sub>\u0394P ) / b<sub>3</sub>
+</div>
+<p>
+Дальше восстанавливаем абсолютные значения:
+</p>
+<div class="formula-block">
+V = V<sub>0</sub>\u22c5(1+\u0394V),&nbsp; P=P<sub>0</sub>\u22c5(1+\u0394P),&nbsp; R=R<sub>0</sub>\u22c5(1+\u0394R)
+</div>
+
+<h3>4) Что вы увидите на графиках</h3>
+<ul>
+  <li>V — выше и контрастнее.</li>
+  <li>P — чуть выше в объёмных неделях (больше подъёмов при меньшем среднем весе).</li>
+  <li>R — будет «подтягиваться» вверх именно там, где комбинация V/P по уравнению повышает прогноз Y.</li>
+</ul>
+`,
+  },
+  {
+    id: 'intensity',
+    title: 'План C — Интенсивностный',
+    subtitle: 'Акцент на «тяжелее средний вес» через P↓ и R↑',
+    explanationHtml: `
+<h3>1) Идея плана</h3>
+<p>
+Интенсивность в вашей постановке управляется через P (число подъёмов, инверсия классической интенсивности):
+P\u2193 \u2192 средний вес\u2191. Этот план делает P более контрастным, а паузы R подбирает из регрессии так,
+чтобы физиологический отклик оставался управляемым.
+</p>
+
+<h3>2) Управляющие приоритеты</h3>
+<ul>
+  <li><b>Основной рычаг</b>: \u0394P ниже (P уменьшаем).</li>
+  <li><b>Компенсация</b>: R увеличиваем настолько, насколько требуется уравнением (обычно \u0394R>0).</li>
+  <li><b>Интерпретация эффекта</b>: так как модель логарифмическая, изменения читаются в % (<a href="#${postulateIds.p2}">Постулат 2</a>).</li>
+</ul>
+
+<h3>3) Вывод формулы коррекции R (пошагово)</h3>
+<p>Берём базовый уровень (при \u0394V=\u0394P=\u0394R=0):</p>
+<div class="formula-block">
+ln(Y<sub>0</sub>) = b<sub>0</sub>
+</div>
+<p>Для конкретной тренировки задаём \u0394V и \u0394P, а целевой уровень ставим близко к Y<sub>0</sub> (или ниже, если нужно разгрузить):</p>
+<div class="formula-block">
+ln(Y<sup>*</sup>) = b<sub>0</sub> + \u03b5(t)
+</div>
+<p>Подставляем в регрессию и решаем относительно \u0394R:</p>
+<div class="formula-block">
+ln(Y<sup>*</sup>) = b<sub>0</sub> + b<sub>1</sub>\u0394V + b<sub>2</sub>\u0394P + b<sub>3</sub>\u0394R
+\\
+\u0394R = ( ln(Y<sup>*</sup>) - b<sub>0</sub> - b<sub>1</sub>\u0394V - b<sub>2</sub>\u0394P ) / b<sub>3</sub>
+</div>
+<p>
+Это и есть формализованная коррекция по <a href="#${postulateIds.p4}">Постулату 4</a>, а выбор корректируемого параметра (обычно R) — по <a href="#${postulateIds.p3}">Постулату 3</a>.
+</p>
+
+<h3>4) Что вы увидите на графиках</h3>
+<ul>
+  <li>P — заметно ниже в интенсивных неделях.</li>
+  <li>R — «взлетает» именно там, где комбинация (V,P) иначе дала бы рост Y.</li>
+  <li>V — может быть ниже, но не обязательно: в интенсивных неделях часто V немного снижается.</li>
+</ul>
+`,
+  },
+]
 
 const observationWeeks = ref<number>(4)
 const sessionsPerWeek = ref<number>(3)
@@ -345,7 +591,16 @@ const summaryWeek = (w: number) => {
   return `Заполнено ${filled}/${sessionsPerWeek.value}`
 }
 
-const plan = ref<Plan | null>(null)
+const plans = ref<Partial<Record<PlanVariantId, Plan>>>({})
+const activePlanId = ref<PlanVariantId>('balanced')
+const activePlan = computed(() => plans.value[activePlanId.value] ?? null)
+const activeVariant = computed(() => planVariants.find((v) => v.id === activePlanId.value) ?? null)
+
+const selectPlan = async (id: PlanVariantId) => {
+  activePlanId.value = id
+  await nextTick()
+  drawCharts()
+}
 const chartVEl = ref<HTMLCanvasElement | null>(null)
 const chartPEl = ref<HTMLCanvasElement | null>(null)
 const chartREl = ref<HTMLCanvasElement | null>(null)
@@ -373,8 +628,158 @@ const baseline = computed(() => {
     V: avg('V') ?? 8000,
     P: avg('P') ?? 60,
     R: avg('R') ?? 4.0,
+    creatinine: avg('creatinine') ?? 5.0,
+    protein: avg('protein') ?? 2.0,
+    myoglobin: avg('myoglobin') ?? 20.0,
   }
 })
+
+const markerLabel = (m: MarkerKey) => (m === 'creatinine' ? 'Креатинин' : m === 'protein' ? 'Белок' : 'Миоглобин')
+
+const mkDelta = (x: number, x0: number) => (x - x0) / Math.max(1e-9, x0)
+const applyDelta = (x0: number, d: number) => x0 * (1 + d)
+
+const defaultCoeffs = (m: MarkerKey): Coeffs => {
+  const b = baseline.value
+  const y0 = b[m]
+  // Фолбэк-коэффициенты: b1,b2>0, b3<0 (больше отдых -> меньше отклик), b0=ln(Y0)
+  if (m === 'myoglobin') return { b0: Math.log(y0), b1: 0.85, b2: 0.25, b3: -0.55 }
+  if (m === 'protein') return { b0: Math.log(y0), b1: 0.45, b2: 0.35, b3: -0.40 }
+  return { b0: Math.log(y0), b1: 0.30, b2: 0.55, b3: -0.35 } // creatinine
+}
+
+const fitCoeffs = (m: MarkerKey): Coeffs => {
+  const b = baseline.value
+  const samples = Object.values(rows.value).filter(
+    (r) =>
+      isFilled(r) &&
+      typeof r[m] === 'number' &&
+      Number.isFinite(r[m] as number) &&
+      (r[m] as number) > 0
+  )
+  if (samples.length < 6) return defaultCoeffs(m)
+
+  try {
+    const X = samples.map((r) => {
+      const dV = mkDelta(r.V as number, b.V)
+      const dP = mkDelta(r.P as number, b.P)
+      const dR = mkDelta(r.R as number, b.R)
+      return [1, dV, dP, dR]
+    })
+    const y = samples.map((r) => Math.log(r[m] as number))
+    const fit = olsFit(X, y)
+    const beta = fit.beta as [number, number, number, number]
+    const out: Coeffs = { b0: beta[0], b1: beta[1], b2: beta[2], b3: beta[3] }
+    if (!Number.isFinite(out.b3) || Math.abs(out.b3) < 0.02) return defaultCoeffs(m)
+    return out
+  } catch {
+    return defaultCoeffs(m)
+  }
+}
+
+const VARIANT_DEFAULTS: Record<PlanVariantId, VariantSettings> = {
+  balanced: { V: 1.0, P: 1.0, wave: 1.0, control: 'protein', targetShiftLn: 0.0, targetWaveLn: 0.02, rMin: 1, rMax: 12 },
+  volume: { V: 1.08, P: 1.04, wave: 1.15, control: 'myoglobin', targetShiftLn: 0.0, targetWaveLn: 0.03, rMin: 1, rMax: 12 },
+  intensity: { V: 0.96, P: 0.88, wave: 1.25, control: 'creatinine', targetShiftLn: -0.02, targetWaveLn: 0.03, rMin: 1, rMax: 12 },
+}
+
+const uid = () => {
+  try {
+    const c = globalThis.crypto as Crypto | undefined
+    return c?.randomUUID ? c.randomUUID() : `${Date.now()}-${Math.random().toString(16).slice(2)}`
+  } catch {
+    return `${Date.now()}-${Math.random().toString(16).slice(2)}`
+  }
+}
+
+const buildPlan = (variantId: PlanVariantId): Plan | null => {
+  const base = baseline.value
+  const total = planWeeks.value
+  if (total <= 0) return null
+  const settings = VARIANT_DEFAULTS[variantId]
+  const coeffs = fitCoeffs(settings.control)
+
+  const clampR = (x: number) => {
+    const a = Math.min(settings.rMin, settings.rMax)
+    const b = Math.max(settings.rMin, settings.rMax)
+    return Math.min(b, Math.max(a, x))
+  }
+
+  const out: PlannedWeek[] = []
+  for (let i = 0; i < total; i++) {
+    const modelName = pickModel(i, total)
+
+    // base scales by week type
+    let Vmul = 1.0
+    let Pmul = 1.0
+
+    if (modelName.includes('Объём')) {
+      Vmul = 1.12
+      Pmul = 1.08
+    } else if (modelName.includes('Интенсив')) {
+      Vmul = 0.95
+      Pmul = 0.85 // P↓ => тяжелее
+    } else if (modelName.includes('Восстанов')) {
+      Vmul = 0.75
+      Pmul = 1.15
+    } else if (modelName.includes('Пиков')) {
+      Vmul = 0.65
+      Pmul = 0.8
+    }
+
+    // tune per variant
+    Vmul *= settings.V
+    Pmul *= settings.P
+
+    const sessions: PlannedSession[] = []
+    for (let s = 1; s <= sessionsPerWeek.value; s++) {
+      const focus = modelName.includes('Восстанов') ? 'Техника' : modelName.includes('Объём') ? 'Объём' : 'Сила'
+      const withinWeekPhase = sessionsPerWeek.value > 1 ? (s - 1) / (sessionsPerWeek.value - 1) : 0
+      const withinWeekWave = Math.sin(withinWeekPhase * Math.PI * 2) // -1..1
+      const acrossWeeksWave = Math.sin((i + 1) * 0.9) // -1..1
+
+      const V = Math.max(0, Math.round(base.V * Vmul * (1 + 0.06 * settings.wave * withinWeekWave + 0.03 * acrossWeeksWave)))
+      const P = Math.max(10, Math.round(base.P * Pmul * (1 - 0.05 * settings.wave * withinWeekWave - 0.02 * acrossWeeksWave)))
+
+      // 1) ΔV and ΔP
+      const dV = mkDelta(V, base.V)
+      const dP = mkDelta(P, base.P)
+
+      // 2) target ln(Y*)
+      const phase = (i + 1) * 0.7 + withinWeekPhase * 1.4
+      const lnTarget = coeffs.b0 + settings.targetShiftLn + settings.targetWaveLn * Math.sin(phase)
+
+      // 3) solve ΔR
+      const dR = (lnTarget - coeffs.b0 - coeffs.b1 * dV - coeffs.b2 * dP) / coeffs.b3
+      const Rraw = applyDelta(base.R, dR)
+      const Rclamped = clampR(Rraw)
+      const R = Math.round(Rclamped * 10) / 10
+
+      const warn = !Number.isFinite(Rraw) || Rclamped !== Rraw
+
+      sessions.push({
+        id: uid(),
+        week: i + 1,
+        session: s,
+        focus,
+        model: modelName,
+        V,
+        P,
+        R,
+        workout: buildWorkout(focus, V, P),
+        flag: warn ? 'Внимание' : 'OK',
+      })
+    }
+
+    out.push({ week: i + 1, model: modelName, sessions })
+  }
+
+  return {
+    createdAt: new Date().toISOString(),
+    competitionDate: competitionDate.value || undefined,
+    weeks: out,
+  }
+}
 
 const pickModel = (weekIndexZero: number, totalWeeks: number) => {
   const w = weekIndexZero + 1
@@ -407,78 +812,21 @@ const buildWorkout = (focus: string, V: number, P: number) => {
 }
 
 const model = async () => {
-  const base = baseline.value
-  const total = planWeeks.value
-  if (total <= 0) return
-
-  const out: PlannedWeek[] = []
-  for (let i = 0; i < total; i++) {
-    const modelName = pickModel(i, total)
-
-    // Скейлы — очень простые, их можно заменить на вычисления по регрессии.
-    let Vmul = 1.0
-    let Pmul = 1.0
-    let Radd = 0.0
-
-    if (modelName.includes('Объём')) {
-      Vmul = 1.12
-      Pmul = 1.08
-      Radd = 0.0
-    } else if (modelName.includes('Интенсив')) {
-      Vmul = 0.95
-      Pmul = 0.85 // P↓ => тяжелее
-      Radd = 0.6
-    } else if (modelName.includes('Восстанов')) {
-      Vmul = 0.75
-      Pmul = 1.15
-      Radd = 0.8
-    } else if (modelName.includes('Пиков')) {
-      Vmul = 0.65
-      Pmul = 0.80
-      Radd = 0.7
-    }
-
-    const sessions: PlannedSession[] = []
-    for (let s = 1; s <= sessionsPerWeek.value; s++) {
-      const focus = modelName.includes('Восстанов') ? 'Техника' : modelName.includes('Объём') ? 'Объём' : 'Сила'
-      const V = Math.round(base.V * Vmul)
-      const P = Math.max(10, Math.round(base.P * Pmul))
-      const R = Math.round((base.R + Radd) * 10) / 10
-
-      // very simple flag based on rough thresholds (can be replaced by predicted markers)
-      const flag: PlannedSession['flag'] = modelName.includes('Объём') && R < 4 ? 'Внимание' : 'OK'
-
-      sessions.push({
-        id: crypto.randomUUID(),
-        week: i + 1,
-        session: s,
-        focus,
-        model: modelName,
-        V,
-        P,
-        R,
-        workout: buildWorkout(focus, V, P),
-        flag,
-      })
-    }
-
-    out.push({ week: i + 1, model: modelName, sessions })
+  plans.value = {
+    balanced: buildPlan('balanced') || undefined,
+    volume: buildPlan('volume') || undefined,
+    intensity: buildPlan('intensity') || undefined,
   }
-
-  plan.value = {
-    createdAt: new Date().toISOString(),
-    competitionDate: competitionDate.value || undefined,
-    weeks: out,
-  }
+  activePlanId.value = activePlanId.value || 'balanced'
 
   await nextTick()
   drawCharts()
 }
 
-const flatPlan = computed(() => (plan.value ? plan.value.weeks.flatMap((w) => w.sessions) : []))
+const flatPlan = computed(() => (activePlan.value ? activePlan.value.weeks.flatMap((w) => w.sessions) : []))
 
 const drawCharts = () => {
-  if (!plan.value) return
+  if (!activePlan.value) return
   const data = flatPlan.value
   const labels = data.map((d) => `Н${d.week}·Т${d.session}`)
 
@@ -525,7 +873,7 @@ const weekDates = (weekIndexZero: number) => {
 const resetAll = () => {
   rows.value = {}
   ensureRows()
-  plan.value = null
+  plans.value = {}
   if (chartV) chartV.destroy()
   if (chartP) chartP.destroy()
   if (chartR) chartR.destroy()
@@ -543,10 +891,11 @@ const fillDemo = () => {
   }
   ensureRows()
   const patterns = [
-    { V: 9500, P: 72, R: 4.0, creatinine: 5.5, protein: 2.4, myoglobin: 25.0 },
-    { V: 8800, P: 64, R: 4.5, creatinine: 6.2, protein: 3.2, myoglobin: 38.0 },
-    { V: 7600, P: 56, R: 5.0, creatinine: 4.8, protein: 2.0, myoglobin: 18.0 },
-    { V: 6800, P: 60, R: 5.2, creatinine: 4.2, protein: 1.6, myoglobin: 12.0 },
+    // Паузы (R) специально в диапазоне 1–3 минут (по просьбе).
+    { V: 9500, P: 72, R: 1.2, creatinine: 5.5, protein: 2.4, myoglobin: 25.0 },
+    { V: 8800, P: 64, R: 1.8, creatinine: 6.2, protein: 3.2, myoglobin: 38.0 },
+    { V: 7600, P: 56, R: 2.4, creatinine: 4.8, protein: 2.0, myoglobin: 18.0 },
+    { V: 6800, P: 60, R: 2.9, creatinine: 4.2, protein: 1.6, myoglobin: 12.0 },
   ]
 
   for (let w = 1; w <= observationWeeks.value; w++) {
@@ -557,7 +906,7 @@ const fillDemo = () => {
   }
   // раскрыть все недели наблюдения
   expandedWeeks.value = Array.from({ length: observationWeeks.value }, (_, i) => i + 1)
-  plan.value = null
+  plans.value = {}
   if (chartV) chartV.destroy()
   if (chartP) chartP.destroy()
   if (chartR) chartR.destroy()
@@ -565,14 +914,14 @@ const fillDemo = () => {
 }
 
 const exportPdf = async () => {
-  if (!plan.value) return
+  if (!activePlan.value) return
   const chartPngDataUrls = {
     V: chartVEl.value ? chartVEl.value.toDataURL('image/png', 1.0) : '',
     P: chartPEl.value ? chartPEl.value.toDataURL('image/png', 1.0) : '',
     R: chartREl.value ? chartREl.value.toDataURL('image/png', 1.0) : '',
   }
 
-  const planText = plan.value.weeks
+  const planText = activePlan.value.weeks
     .map((w) => {
       const head = `Неделя ${w.week} — ${w.model}`
       const sessions = w.sessions
@@ -587,7 +936,9 @@ const exportPdf = async () => {
     })
     .join('\n\n' + '-'.repeat(40) + '\n\n')
 
-  const subtitle = competitionDate.value ? `Дата соревнований: ${competitionDate.value}` : `Сформировано: ${new Date(plan.value.createdAt).toLocaleString('ru-RU')}`
+  const subtitle = competitionDate.value
+    ? `Дата соревнований: ${competitionDate.value} · ${activeVariant.value?.title ?? ''}`.trim()
+    : `Сформировано: ${new Date(activePlan.value.createdAt).toLocaleString('ru-RU')} · ${activeVariant.value?.title ?? ''}`.trim()
 
   const blob = await $fetch<Blob>('/api/pdf', {
     method: 'POST',

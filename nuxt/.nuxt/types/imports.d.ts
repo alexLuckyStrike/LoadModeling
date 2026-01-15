@@ -46,6 +46,7 @@ declare global {
   const markRaw: typeof import('vue').markRaw
   const navigateTo: typeof import('../../node_modules/nuxt/dist/app/composables/router').navigateTo
   const nextTick: typeof import('vue').nextTick
+  const olsFit: typeof import('../../utils/ols').olsFit
   const onActivated: typeof import('vue').onActivated
   const onBeforeMount: typeof import('vue').onBeforeMount
   const onBeforeRouteLeave: typeof import('vue-router').onBeforeRouteLeave
@@ -185,6 +186,9 @@ declare global {
   // @ts-ignore
   export type { PendingRoute } from '../../composables/useAlgorithmAuth'
   import('../../composables/useAlgorithmAuth')
+  // @ts-ignore
+  export type { OlsResult } from '../../utils/ols'
+  import('../../utils/ols')
 }
 // for vue template auto import
 import { UnwrapRef } from 'vue'
@@ -235,6 +239,7 @@ declare module 'vue' {
     readonly markRaw: UnwrapRef<typeof import('vue')['markRaw']>
     readonly navigateTo: UnwrapRef<typeof import('../../node_modules/nuxt/dist/app/composables/router')['navigateTo']>
     readonly nextTick: UnwrapRef<typeof import('vue')['nextTick']>
+    readonly olsFit: UnwrapRef<typeof import('../../utils/ols')['olsFit']>
     readonly onActivated: UnwrapRef<typeof import('vue')['onActivated']>
     readonly onBeforeMount: UnwrapRef<typeof import('vue')['onBeforeMount']>
     readonly onBeforeRouteLeave: UnwrapRef<typeof import('vue-router')['onBeforeRouteLeave']>

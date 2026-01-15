@@ -24,7 +24,7 @@ const closeSidebar = () => { sidebarOpen.value = false }
     <nav class="nav">
       <NuxtLink to="/" class="nav-btn" :class="{ active: isActive('/') }">Идея</NuxtLink>
       <NuxtLink to="/markers" class="nav-btn" :class="{ active: isActive('/markers') }">Маркеры</NuxtLink>
-      <NuxtLink to="/models" class="nav-btn" :class="{ active: isActive('/models') }">Модели</NuxtLink>
+      <NuxtLink to="/models" class="nav-btn" :class="{ active: isActive('/models') }">Модели микроциклов</NuxtLink>
       <NuxtLink to="/regression" class="nav-btn" :class="{ active: isActive('/regression') }">Регрессия</NuxtLink>
       <NuxtLink to="/algorithm" class="nav-btn" :class="{ active: isActive('/algorithm') }">Алгоритм</NuxtLink>
       <NuxtLink to="/planner" class="nav-btn" :class="{ active: isActive('/planner') }">Моделирование</NuxtLink>
@@ -36,7 +36,7 @@ const closeSidebar = () => { sidebarOpen.value = false }
           <button class="close-btn" @click="closeSidebar" aria-label="Закрыть меню">×</button>
           <NuxtLink to="/" class="sidebar-link" :class="{ active: isActive('/') }" @click="closeSidebar">Идея</NuxtLink>
           <NuxtLink to="/markers" class="sidebar-link" :class="{ active: isActive('/markers') }" @click="closeSidebar">Маркеры</NuxtLink>
-          <NuxtLink to="/models" class="sidebar-link" :class="{ active: isActive('/models') }" @click="closeSidebar">Модели</NuxtLink>
+          <NuxtLink to="/models" class="sidebar-link" :class="{ active: isActive('/models') }" @click="closeSidebar">Модели микроциклов</NuxtLink>
           <NuxtLink to="/regression" class="sidebar-link" :class="{ active: isActive('/regression') }" @click="closeSidebar">Регрессия</NuxtLink>
           <NuxtLink to="/algorithm" class="sidebar-link" :class="{ active: isActive('/algorithm') }" @click="closeSidebar">Алгоритм</NuxtLink>
           <NuxtLink to="/planner" class="sidebar-link" :class="{ active: isActive('/planner') }" @click="closeSidebar">Моделирование</NuxtLink>
