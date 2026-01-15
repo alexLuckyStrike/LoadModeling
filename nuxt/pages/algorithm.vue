@@ -1,18 +1,21 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
+import MarkdownRender from '~/components/MarkdownRender.vue'
 
 const content = ref('')
-const loading = ref(false)
-const loadError = ref(false)
+const loading = ref(true)
+const error = ref(false)
 
 onMounted(async () => {
   loading.value = true
+  error.value = false
   try {
     const res = await fetch('http://localhost:3001/content/algorithm')
-    if (!res.ok) throw new Error(String(res.status))
+    if (!res.ok) throw new Error(`HTTP ${res.status}`)
     content.value = await res.text()
-  } catch {
-    loadError.value = true
+  } catch (e) {
+    error.value = true
+    console.error('Failed to load algorithm content:', e)
   } finally {
     loading.value = false
   }
@@ -21,11 +24,26 @@ onMounted(async () => {
 
 <template>
   <div class="container-page">
-    <h1>Алгоритм размышлений</h1>
-    <div class="card">
-      <div v-if="loading">Загрузка…</div>
-      <div v-else-if="loadError">Не удалось загрузить контент</div>
-      <pre v-else style="white-space: pre-wrap">{{ content }}</pre>
+    <h1 class="page-title">Алгоритм размышлений</h1>
+
+    <div v-if="loading" class="text-slate-600 text-center py-8">
+      Загрузка контента...
+    </div>
+
+    <div v-else-if="error" class="rounded-2xl border bg-rose-50 border-rose-100 p-6 text-rose-800">
+      <p class="font-medium">Не удалось загрузить контент</p>
+      <p class="text-sm mt-2">Проверьте, запущен ли backend сервер на порту 3001</p>
+    </div>
+
+    <div v-else class="markdown-content">
+      <MarkdownRender :markdown="content" />
     </div>
   </div>
 </template>
+
+<style scoped>
+.markdown-content {
+  max-width: 900px;
+  margin: 0 auto;
+}
+</style>
