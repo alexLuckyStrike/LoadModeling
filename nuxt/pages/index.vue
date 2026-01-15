@@ -1,51 +1,39 @@
 <template>
   <div class="space-y-6">
     <section class="grid lg:grid-cols-12 gap-6 items-start">
-      <div class="lg:col-span-7 space-y-4">
-        <h1 class="text-2xl sm:text-3xl font-semibold tracking-tight">
-          Диссертация: моделирование тренировочного процесса в пауэрлифтинге
-        </h1>
-        <p class="text-slate-700 leading-relaxed">
-          Идея: управлять параметрами нагрузки (<b>V</b> — объём в кг, <b>P</b> — количество подъёмов, <b>R</b> — отдых между подходами)
-          через прогноз концентраций биомаркеров мочи, измеренных через 2 часа после тренировки
-          (<b>креатинин</b>, <b>белок</b>, <b>миоглобин/гемоглобин</b>).
-        </p>
-
-        <div class="flex flex-col sm:flex-row gap-3">
-          <NuxtLink
-            to="/planner"
-            class="inline-flex items-center justify-center px-4 py-2.5 rounded-xl font-medium"
-            :class="cta === 'planner' ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-900 hover:bg-slate-200'"
-            @click="cta='planner'"
-          >
-            Открыть планировщик
-          </NuxtLink>
-
-          <button
-            type="button"
-            class="inline-flex items-center justify-center px-4 py-2.5 rounded-xl font-medium"
-            :class="cta === 'model' ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-900 hover:bg-slate-200'"
-            @click="scrollToModel"
-          >
-            Посмотреть формулы
-          </button>
-        </div>
-      </div>
-
-      <div class="lg:col-span-5">
-        <UiCard title="4 постулата (что даёт модель)">
-          <ol class="list-decimal pl-5 space-y-2 text-slate-700">
-            <li><b>Индивидуальная чувствительность:</b> сравнение |коэф.| показывает, к чему спортсмен наиболее восприимчив (V, P или R).</li>
-            <li><b>Скорость изменения:</b> коэффициент задаёт процентное изменение маркера при изменении параметра на 1 единицу.</li>
-            <li><b>Приоритет коррекции:</b> самый большой |коэф.| — лучший «рычаг» для быстрых правок без разрушения плана.</li>
-            <li><b>Взаимодействие параметров:</b> рост одного параметра можно компенсировать другими, удерживая маркер в целевой зоне.</li>
-          </ol>
-        </UiCard>
-      </div>
-    </section>
-
-    <section id="model" class="grid lg:grid-cols-12 gap-6">
       <div class="lg:col-span-7 space-y-6">
+        <div class="space-y-4">
+          <h1 class="text-2xl sm:text-3xl font-semibold tracking-tight">
+            Диссертация: моделирование тренировочного процесса в пауэрлифтинге
+          </h1>
+          <p class="text-slate-700 leading-relaxed">
+            Идея: управлять параметрами нагрузки (<b>V</b> — объём в кг, <b>P</b> — количество подъёмов, <b>R</b> — отдых между подходами)
+            через прогноз концентраций биомаркеров мочи, измеренных через 2 часа после тренировки
+            (<b>креатинин</b>, <b>белок</b>, <b>миоглобин/гемоглобин</b>).
+          </p>
+
+          <div class="flex flex-col sm:flex-row gap-3">
+            <NuxtLink
+              to="/planner"
+              class="inline-flex items-center justify-center px-4 py-2.5 rounded-xl font-medium"
+              :class="cta === 'planner' ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-900 hover:bg-slate-200'"
+              @click="cta='planner'"
+            >
+              Открыть планировщик
+            </NuxtLink>
+
+            <button
+              type="button"
+              class="inline-flex items-center justify-center px-4 py-2.5 rounded-xl font-medium"
+              :class="cta === 'model' ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-900 hover:bg-slate-200'"
+              @click="scrollToModel"
+            >
+              Посмотреть формулы
+            </button>
+          </div>
+        </div>
+
+        <div id="model" class="space-y-6">
         <UiCard title="Логарифмическая регрессия (ваш случай)">
           <div class="space-y-3 text-slate-700 leading-relaxed">
             <p>
@@ -74,9 +62,19 @@
             <p><b>Компенсации:</b> рост V можно компенсировать ростом R или изменением P (4-й постулат).</p>
           </div>
         </UiCard>
+        </div>
       </div>
 
       <div class="lg:col-span-5 space-y-6">
+        <UiCard title="4 постулата (что даёт модель)">
+          <ol class="list-decimal pl-5 space-y-2 text-slate-700">
+            <li><b>Индивидуальная чувствительность:</b> сравнение |коэф.| показывает, к чему спортсмен наиболее восприимчив (V, P или R).</li>
+            <li><b>Скорость изменения:</b> коэффициент задаёт процентное изменение маркера при изменении параметра на 1 единицу.</li>
+            <li><b>Приоритет коррекции:</b> самый большой |коэф.| — лучший «рычаг» для быстрых правок без разрушения плана.</li>
+            <li><b>Взаимодействие параметров:</b> рост одного параметра можно компенсировать другими, удерживая маркер в целевой зоне.</li>
+          </ol>
+        </UiCard>
+
         <UiCard title="Референсные зоны (как в работе)">
           <div class="space-y-4 text-sm text-slate-700">
             <div>

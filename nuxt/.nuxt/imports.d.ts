@@ -29,4 +29,5 @@ export { withCtx, withDirectives, withKeys, withMemo, withModifiers, withScopeId
 export { requestIdleCallback, cancelIdleCallback } from '#app/compat/idle-callback';
 export { setInterval } from '#app/compat/interval';
 export { useAlgorithmAuth, PendingRoute } from '../composables/useAlgorithmAuth';
+export { olsFit, OlsResult } from '../utils/ols';
 export { definePageMeta } from '../node_modules/nuxt/dist/pages/runtime/composables';

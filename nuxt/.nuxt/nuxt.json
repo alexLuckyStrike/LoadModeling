@@ -1,13 +1,7 @@
 {
-<<<<<<< HEAD
   "_hash": "Gw-5qZA_6N-2h9VWm9rRAXzHskS-dzvGeX1Y9LfS-J0",
   "project": {
     "rootDir": "C:/Users/mgafk/Desktop/LoadModeling/nuxt"
-=======
-  "_hash": "Vg2NTJKqROJwVMXT9ZwpX2xkvkxkFmvMbJF9U23S470",
-  "project": {
-    "rootDir": "/Users/admin/Documents/powerlift-nuxt-spa-v6-final-auth-modal-nav-fixed/nuxt"
->>>>>>> 568b476ba75ba56b17bdc36f6467dadfc26b018b
   },
   "versions": {
     "nuxt": "3.17.5"
