@@ -1,18 +1,1 @@
-export default {
-  "@vite/client": {
-    "prefetch": true,
-    "isEntry": true,
-    "file": "@vite/client",
-    "css": [],
-    "module": true,
-    "resourceType": "script"
-  },
-  "C:/Users/mgafk/Desktop/LoadModeling/nuxt/node_modules/nuxt/dist/app/entry.js": {
-    "resourceType": "script",
-    "module": true,
-    "prefetch": true,
-    "preload": true,
-    "isEntry": true,
-    "file": "C:/Users/mgafk/Desktop/LoadModeling/nuxt/node_modules/nuxt/dist/app/entry.js"
-  }
-}
+export default ({"@vite/client":{prefetch:!0,isEntry:!0,file:"@vite/client",css:[],module:!0,resourceType:"script",dynamicImports:void 0},"/Users/admin/Documents/powerlift-nuxt-spa-v6-final-auth-modal-nav-fixed/nuxt/node_modules/nuxt/dist/app/entry.js":{resourceType:"script",module:!0,prefetch:!0,preload:!0,isEntry:!0,file:"/Users/admin/Documents/powerlift-nuxt-spa-v6-final-auth-modal-nav-fixed/nuxt/node_modules/nuxt/dist/app/entry.js",dynamicImports:void 0}})
