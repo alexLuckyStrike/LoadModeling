@@ -1,1 +1,1 @@
-export { default } from "file:///Users/admin/Desktop/powerlift-nuxt-spa-v6-final-auth-modal-nav-fixed/nuxt/node_modules/@nuxt/vite-builder/dist/runtime/client.manifest.mjs"
+export { default } from "file:///C:/Users/mgafk/Desktop/LoadModeling/nuxt/node_modules/@nuxt/vite-builder/dist/runtime/client.manifest.mjs"

@@ -77,9 +77,6 @@
       "#shared": [
         "../shared"
       ],
-      "#shared/*": [
-        "../shared/*"
-      ],
       "assets": [
         "../assets"
       ],
@@ -89,9 +86,6 @@
       "public": [
         "../public"
       ],
-      "public/*": [
-        "../public/*"
-      ],
       "#build": [
         "./"
       ],
@@ -99,7 +93,7 @@
         "./*"
       ],
       "#internal/nuxt/paths": [
-        "../node_modules/@nuxt/nitro-server/dist/runtime/utils/paths"
+        "../node_modules/nuxt/dist/core/runtime/nitro/utils/paths"
       ],
       "#unhead/composables": [
         "../node_modules/nuxt/dist/head/runtime/composables/v3"
@@ -113,12 +107,11 @@
   },
   "include": [
     "./types/nitro-nuxt.d.ts",
-    "../node_modules/runtime/server",
-    "../node_modules/dist/runtime/server",
-    "../server/**/*",
-    "../shared/**/*.d.ts",
+    "../node_modules/@nuxt/devtools/runtime/server",
+    "../node_modules/@nuxt/telemetry/runtime/server",
     "./types/nitro.d.ts",
-    "../**/*"
+    "../**/*",
+    "../server/**/*"
   ],
   "exclude": [
     "../node_modules",

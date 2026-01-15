@@ -53,7 +53,7 @@ const closeSidebar = () => { sidebarOpen.value = false }
   align-items: center;
   padding: 1rem;
   flex-wrap: wrap;
-  width: 100vw;
+  width: 100%;
   box-sizing: border-box;
   overflow-x: hidden;
 }
@@ -87,7 +87,8 @@ const closeSidebar = () => { sidebarOpen.value = false }
   display: flex;
   gap: 0.5rem;
   overflow-x: auto;
-  max-width: 100vw;
+  max-width: 100%;
+  min-width: 0;
   padding-bottom: 0.25rem;
   overscroll-behavior-x: contain;
 }
