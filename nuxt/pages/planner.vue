@@ -52,6 +52,27 @@
           </div>
         </UiCard>
 
+        <UiCard title="Покой (baseline)" subtitle="Y0 — проба без нагрузки">
+          <div class="text-sm text-slate-700">
+            Если есть проба в покое, модель строится для
+            <b>Z = ln(Y / Y0)</b>, а прогноз возвращается как <b>Ŷ = Y0 · exp(Ẑ)</b>.
+          </div>
+          <div class="mt-3 grid grid-cols-3 gap-3">
+            <Field label="Креатинин Y0">
+              <input v-model.number="restBaseline.creatinine" type="number" step="0.1" class="input" />
+            </Field>
+            <Field label="Белок Y0">
+              <input v-model.number="restBaseline.protein" type="number" step="0.1" class="input" />
+            </Field>
+            <Field label="Миоглобин Y0">
+              <input v-model.number="restBaseline.myoglobin" type="number" step="0.1" class="input" />
+            </Field>
+          </div>
+          <div class="text-xs text-slate-600 mt-2">
+            Если Y0 не заполнен, будет использована внутренняя подстановка (менее предпочтительно).
+          </div>
+        </UiCard>
+
         <UiCard title="Моделирование" subtitle="Кнопка запуска">
           <div class="flex flex-col gap-2">
             <button
@@ -282,6 +303,12 @@ type Row = {
   V: number | null
   P: number | null
   R: number | null
+  creatinine: number | null
+  protein: number | null
+  myoglobin: number | null
+}
+
+type RestBaseline = {
   creatinine: number | null
   protein: number | null
   myoglobin: number | null
@@ -542,6 +569,12 @@ const planWeeks = computed(() => {
 const rows = ref<Record<string, Row>>({})
 const keyOf = (w: number, s: number) => `${w}-${s}`
 
+const restBaseline = ref<RestBaseline>({
+  creatinine: null,
+  protein: null,
+  myoglobin: null,
+})
+
 const ensureRows = () => {
   const next: Record<string, Row> = { ...rows.value }
   for (let w = 1; w <= observationWeeks.value; w++) {
@@ -574,11 +607,13 @@ const saveState = () => {
     sessionsPerWeek: sessionsPerWeek.value,
     startDate: startDate.value,
     competitionDate: competitionDate.value,
+    restBaseline: restBaseline.value,
   }
   localStorage.setItem(STORAGE_KEY, JSON.stringify(payload))
 }
 
 watch([observationWeeks, sessionsPerWeek, startDate, competitionDate], saveState)
+watch(restBaseline, saveState, { deep: true })
 
 const getRow = (w: number, s: number) => rows.value[keyOf(w, s)]
 
@@ -639,17 +674,30 @@ const markerLabel = (m: MarkerKey) => (m === 'creatinine' ? 'Креатинин'
 const mkDelta = (x: number, x0: number) => (x - x0) / Math.max(1e-9, x0)
 const applyDelta = (x0: number, d: number) => x0 * (1 + d)
 
+const getRestY0 = (m: MarkerKey): number => {
+  const r = restBaseline.value[m]
+  if (typeof r === 'number' && Number.isFinite(r) && r > 0) return r
+  // fallback: если покой не введён, используем тренировочную "базу" (не идеально, но не ломает расчёт)
+  const b = baseline.value[m]
+  return typeof b === 'number' && Number.isFinite(b) && b > 0 ? b : 1
+}
+
 const defaultCoeffs = (m: MarkerKey): Coeffs => {
   const b = baseline.value
-  const y0 = b[m]
-  // Фолбэк-коэффициенты: b1,b2>0, b3<0 (больше отдых -> меньше отклик), b0=ln(Y0)
-  if (m === 'myoglobin') return { b0: Math.log(y0), b1: 0.85, b2: 0.25, b3: -0.55 }
-  if (m === 'protein') return { b0: Math.log(y0), b1: 0.45, b2: 0.35, b3: -0.40 }
-  return { b0: Math.log(y0), b1: 0.30, b2: 0.55, b3: -0.35 } // creatinine
+  const yTrain0 = b[m]
+  const yRest0 = getRestY0(m)
+  // Теперь зависимая переменная: Z = ln(Y / Y0)
+  // Поэтому b0 ≈ ln(Y_train_base / Y_rest)
+  const b0 = Math.log(Math.max(1e-9, yTrain0) / Math.max(1e-9, yRest0))
+  // Фолбэк-коэффициенты: b1,b2>0, b3<0 (больше отдых -> меньше отклик)
+  if (m === 'myoglobin') return { b0, b1: 0.85, b2: 0.25, b3: -0.55 }
+  if (m === 'protein') return { b0, b1: 0.45, b2: 0.35, b3: -0.40 }
+  return { b0, b1: 0.30, b2: 0.55, b3: -0.35 } // creatinine
 }
 
 const fitCoeffs = (m: MarkerKey): Coeffs => {
   const b = baseline.value
+  const yRest0 = getRestY0(m)
   const samples = Object.values(rows.value).filter(
     (r) =>
       isFilled(r) &&
@@ -666,7 +714,8 @@ const fitCoeffs = (m: MarkerKey): Coeffs => {
       const dR = mkDelta(r.R as number, b.R)
       return [1, dV, dP, dR]
     })
-    const y = samples.map((r) => Math.log(r[m] as number))
+    // зависимая переменная: Z_i = ln(Y_i / Y0)
+    const y = samples.map((r) => Math.log((r[m] as number) / yRest0))
     const fit = olsFit(X, y)
     const beta = fit.beta as [number, number, number, number]
     const out: Coeffs = { b0: beta[0], b1: beta[1], b2: beta[2], b3: beta[3] }
@@ -874,6 +923,7 @@ const resetAll = () => {
   rows.value = {}
   ensureRows()
   plans.value = {}
+  restBaseline.value = { creatinine: null, protein: null, myoglobin: null }
   if (chartV) chartV.destroy()
   if (chartP) chartP.destroy()
   if (chartR) chartR.destroy()
@@ -890,6 +940,8 @@ const fillDemo = () => {
     competitionDate.value = target.toISOString().slice(0, 10)
   }
   ensureRows()
+  // Демо для пробы в покое (Y0): просто положительные значения, чтобы работал ln(Y/Y0)
+  restBaseline.value = { creatinine: 3.5, protein: 1.0, myoglobin: 10.0 }
   const patterns = [
     // Паузы (R) специально в диапазоне 1–3 минут (по просьбе).
     { V: 9500, P: 72, R: 1.2, creatinine: 5.5, protein: 2.4, myoglobin: 25.0 },
@@ -969,6 +1021,14 @@ onMounted(() => {
     if (typeof parsed?.sessionsPerWeek === 'number') sessionsPerWeek.value = parsed.sessionsPerWeek
     if (typeof parsed?.startDate === 'string') startDate.value = parsed.startDate
     if (typeof parsed?.competitionDate === 'string') competitionDate.value = parsed.competitionDate
+    if (parsed?.restBaseline && typeof parsed.restBaseline === 'object') {
+      const rb = parsed.restBaseline
+      restBaseline.value = {
+        creatinine: typeof rb.creatinine === 'number' ? rb.creatinine : null,
+        protein: typeof rb.protein === 'number' ? rb.protein : null,
+        myoglobin: typeof rb.myoglobin === 'number' ? rb.myoglobin : null,
+      }
+    }
   } catch {
     // ignore
   }
