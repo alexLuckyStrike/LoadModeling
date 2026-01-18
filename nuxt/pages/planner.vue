@@ -80,7 +80,7 @@
               class="h-10 px-3 rounded-xl bg-slate-900 text-white font-medium hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed"
               @click="model"
             >
-              Получить 3 варианта тренировочного плана
+              Получить 5 вариантов тренировочного плана
             </button>
             <button :disabled="!activePlan" class="h-10 px-3 rounded-xl bg-emerald-600 text-white font-medium hover:bg-emerald-500 disabled:opacity-50" @click="exportPdf">
               Скачать PDF (выбранный план + график)
@@ -360,7 +360,7 @@ type VariantSettings = {
   rMax: number
 }
 
-type PlanVariantId = 'balanced' | 'volume' | 'intensity'
+type PlanVariantId = 'balanced' | 'volume' | 'intensity' | 'recovery' | 'performance'
 type PlanVariant = {
   id: PlanVariantId
   title: string
@@ -537,6 +537,51 @@ ln(Y<sup>*</sup>) = b<sub>0</sub> + b<sub>1</sub>\u0394V + b<sub>2</sub>\u0394P 
   <li>P — заметно ниже в интенсивных неделях.</li>
   <li>R — «взлетает» именно там, где комбинация (V,P) иначе дала бы рост Y.</li>
   <li>V — может быть ниже, но не обязательно: в интенсивных неделях часто V немного снижается.</li>
+</ul>
+`,
+  },
+  {
+    id: 'recovery',
+    title: 'План D — Восстановительный (бережный)',
+    subtitle: 'Меньше V, мягче волны; удерживаем маркеры ниже базового',
+    explanationHtml: `
+<h3>1) Идея плана</h3>
+<p>
+Это вариант, когда приоритет — <b>восстановление и устойчивость</b>: объём V снижается, волны мягче,
+а паузы R подбираются так, чтобы контрольный маркер держался <b>ниже базового уровня</b>.
+</p>
+
+<h3>2) Для кого подходит</h3>
+<ul>
+  <li>После тяжёлого блока / накопленной усталости</li>
+  <li>При «пограничных» маркерах и необходимости разгрузиться без полного отдыха</li>
+  <li>Когда важнее стабильность, чем прогресс любой ценой</li>
+</ul>
+
+<h3>3) Что меняется по сравнению с планом A</h3>
+<ul>
+  <li>V — ниже</li>
+  <li>P — ближе к базовому или чуть выше (больше «лёгкой» работы)</li>
+  <li>R — чаще растёт, потому что это самый “дешёвый” рычаг для снижения отклика (<a href="#${postulateIds.p3}">Постулат 3</a>)</li>
+</ul>
+`,
+  },
+  {
+    id: 'performance',
+    title: 'План E — Соревновательный (под результат)',
+    subtitle: 'Меньше P (тяжелее), умеренный V, R под контролем по уравнению',
+    explanationHtml: `
+<h3>1) Идея плана</h3>
+<p>
+Этот вариант делает нагрузку «ближе к соревновательной»: <b>P ниже</b> (средний вес выше),
+V умеренный, а R рассчитывается из регрессии так, чтобы держать физиологический отклик управляемым.
+</p>
+
+<h3>2) Чем отличается от плана C</h3>
+<ul>
+  <li>Волны более ровные (меньше «качелей» внутри недели)</li>
+  <li>Целевой уровень маркера чуть ниже базового: меньше риска “перегреть” план</li>
+  <li>Ориентация — на аккуратный перенос в пик без резких провалов/вылетов</li>
 </ul>
 `,
   },
@@ -730,6 +775,8 @@ const VARIANT_DEFAULTS: Record<PlanVariantId, VariantSettings> = {
   balanced: { V: 1.0, P: 1.0, wave: 1.0, control: 'protein', targetShiftLn: 0.0, targetWaveLn: 0.02, rMin: 1, rMax: 12 },
   volume: { V: 1.08, P: 1.04, wave: 1.15, control: 'myoglobin', targetShiftLn: 0.0, targetWaveLn: 0.03, rMin: 1, rMax: 12 },
   intensity: { V: 0.96, P: 0.88, wave: 1.25, control: 'creatinine', targetShiftLn: -0.02, targetWaveLn: 0.03, rMin: 1, rMax: 12 },
+  recovery: { V: 0.88, P: 1.06, wave: 0.85, control: 'protein', targetShiftLn: -0.03, targetWaveLn: 0.015, rMin: 1, rMax: 14 },
+  performance: { V: 0.98, P: 0.84, wave: 1.05, control: 'myoglobin', targetShiftLn: -0.02, targetWaveLn: 0.02, rMin: 1, rMax: 14 },
 }
 
 const uid = () => {
@@ -865,6 +912,8 @@ const model = async () => {
     balanced: buildPlan('balanced') || undefined,
     volume: buildPlan('volume') || undefined,
     intensity: buildPlan('intensity') || undefined,
+    recovery: buildPlan('recovery') || undefined,
+    performance: buildPlan('performance') || undefined,
   }
   activePlanId.value = activePlanId.value || 'balanced'
 

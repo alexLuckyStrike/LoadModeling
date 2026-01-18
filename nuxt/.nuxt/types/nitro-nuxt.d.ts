@@ -1,7 +1,4 @@
 
-/// <reference path="app.config.d.ts" />
-/// <reference path="runtime-config.d.ts" />
-/// <reference types="/Users/admin/Documents/powerlift-nuxt-spa-v6-final-auth-modal-nav-fixed/nuxt/node_modules/@nuxt/nitro-server/dist/index.mjs" />
 /// <reference path="nitro-middleware.d.ts" />
 /// <reference path="./schema.d.ts" />
 
