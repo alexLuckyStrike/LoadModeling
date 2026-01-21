@@ -73,6 +73,9 @@
       "#shared": [
         "../shared"
       ],
+      "#shared/*": [
+        "../shared/*"
+      ],
       "assets": [
         "../assets"
       ],
@@ -81,6 +84,9 @@
       ],
       "public": [
         "../public"
+      ],
+      "public/*": [
+        "../public/*"
       ],
       "#app": [
         "../node_modules/nuxt/dist/app"
@@ -145,24 +151,16 @@
     "../**/*",
     "../.config/nuxt.*",
     "./nuxt.d.ts",
-    "../node_modules/@nuxt/devtools/runtime",
-    "../node_modules/@nuxt/devtools/dist/runtime",
-    "../node_modules/@nuxt/telemetry/runtime",
-    "../node_modules/@nuxt/telemetry/dist/runtime",
+    "../node_modules/runtime",
+    "../node_modules/dist/runtime",
     ".."
   ],
   "exclude": [
     "../dist",
     "../.data",
-    "../node_modules",
     "../../node_modules",
-    "../node_modules/nuxt/node_modules",
-    "../node_modules/@nuxt/devtools/node_modules",
-    "../node_modules/@nuxt/telemetry/node_modules",
-    "../node_modules/@nuxt/devtools/runtime/server",
-    "../node_modules/@nuxt/devtools/dist/runtime/server",
-    "../node_modules/@nuxt/telemetry/runtime/server",
-    "../node_modules/@nuxt/telemetry/dist/runtime/server",
+    "../node_modules/runtime/server",
+    "../node_modules/dist/runtime/server",
     "dev"
   ]
 }
