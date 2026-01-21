@@ -10,7 +10,7 @@
       </div>
 
       <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4 mobile-cards-vertical">
-        <UiCard title="Период" subtitle="Наблюдение и план до даты старта">
+        <UiCard title="Блок: Период" subtitle="Наблюдение и план до даты старта">
           <div class="grid grid-cols-2 gap-3">
             <Field label="Недели наблюдения">
               <input v-model.number="observationWeeks" type="number" min="1" max="52" class="input" />
@@ -38,7 +38,7 @@
           </div>
         </UiCard>
 
-        <UiCard title="Данные" subtitle="База для моделирования">
+        <UiCard title="Блок: Данные" subtitle="База для моделирования">
           <div class="text-sm text-slate-700">
             Заполните хотя бы 1 неделю — по средним значениям будет построена базовая нагрузка, от которой рассчитываются микроциклы.
           </div>
@@ -52,7 +52,7 @@
           </div>
         </UiCard>
 
-        <UiCard title="Покой (baseline)" subtitle="Y0 — проба без нагрузки">
+        <UiCard title="Блок: Покой (baseline)" subtitle="Y0 — проба без нагрузки">
           <div class="text-sm text-slate-700">
             Если есть проба в покое, модель строится для
             <b>Z = ln(Y / Y0)</b>, а прогноз возвращается как <b>Ŷ = Y0 · exp(Ẑ)</b>.
@@ -73,7 +73,82 @@
           </div>
         </UiCard>
 
-        <UiCard title="Моделирование" subtitle="Кнопка запуска">
+        <UiCard title="Блок: Фото для распознавания" subtitle="Шкала (коробка) и индикатор">
+          <div class="flex items-center justify-between gap-3">
+            <div class="text-sm text-slate-700">
+              Загрузите или перетащите 2 изображения: <b>шкалу/коробку с индикаторами</b> и <b>сам индикатор</b>.
+            </div>
+            <button
+              type="button"
+              class="h-10 px-3 rounded-xl border font-medium hover:bg-slate-50"
+              @click="photosOpen = !photosOpen"
+            >
+              {{ photosOpen ? 'Свернуть' : 'Развернуть' }}
+            </button>
+          </div>
+
+          <div v-show="photosOpen" class="mt-3 grid gap-3">
+            <div class="rounded-2xl border p-4">
+              <div class="font-medium">Карточка: Шкала / коробка</div>
+              <div
+                class="dropzone mt-2"
+                :class="{ 'is-over': dragOver.scale }"
+                @dragenter.prevent="dragOver.scale = true"
+                @dragover.prevent="dragOver.scale = true"
+                @dragleave.prevent="dragOver.scale = false"
+                @drop.prevent="onDrop('scale', $event)"
+              >
+                <input class="dropzone-input" type="file" accept="image/*" @change="onFileInput('scale', $event)" />
+                <div class="dropzone-inner">
+                  <div v-if="scaleImage" class="dropzone-preview">
+                    <img :src="scaleImage.url" alt="scale preview" />
+                    <div class="text-xs text-slate-600 mt-2">{{ scaleImage.name }}</div>
+                    <button type="button" class="mt-3 h-10 px-3 rounded-xl border font-medium hover:bg-slate-50" @click="clearImage('scale')">
+                      Очистить
+                    </button>
+                  </div>
+                  <div v-else class="dropzone-empty">
+                    <div class="text-sm text-slate-700">Перетащите фото сюда или нажмите, чтобы выбрать файл</div>
+                    <div class="text-xs text-slate-600 mt-1">Поддерживаются JPG/PNG/WEBP.</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="rounded-2xl border p-4">
+              <div class="font-medium">Карточка: Индикатор</div>
+              <div
+                class="dropzone mt-2"
+                :class="{ 'is-over': dragOver.indicator }"
+                @dragenter.prevent="dragOver.indicator = true"
+                @dragover.prevent="dragOver.indicator = true"
+                @dragleave.prevent="dragOver.indicator = false"
+                @drop.prevent="onDrop('indicator', $event)"
+              >
+                <input class="dropzone-input" type="file" accept="image/*" @change="onFileInput('indicator', $event)" />
+                <div class="dropzone-inner">
+                  <div v-if="indicatorImage" class="dropzone-preview">
+                    <img :src="indicatorImage.url" alt="indicator preview" />
+                    <div class="text-xs text-slate-600 mt-2">{{ indicatorImage.name }}</div>
+                    <button type="button" class="mt-3 h-10 px-3 rounded-xl border font-medium hover:bg-slate-50" @click="clearImage('indicator')">
+                      Очистить
+                    </button>
+                  </div>
+                  <div v-else class="dropzone-empty">
+                    <div class="text-sm text-slate-700">Перетащите фото сюда или нажмите, чтобы выбрать файл</div>
+                    <div class="text-xs text-slate-600 mt-1">Поддерживаются JPG/PNG/WEBP.</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div v-show="photosOpen" class="text-xs text-slate-600 mt-3">
+            Сейчас это загрузка/превью. Следующий шаг — автоматическое определение шкалы и считывание индикатора (CV).
+          </div>
+        </UiCard>
+
+        <UiCard title="Блок: Моделирование" subtitle="Кнопка запуска">
           <div class="flex flex-col gap-2">
             <button
               :disabled="!canModel"
@@ -112,13 +187,13 @@
           </div>
         </UiCard>
 
-        <UiCard title="Контент" subtitle="Obsidian страницы">
+        <UiCard title="Блок: Контент" subtitle="Obsidian страницы">
           <div class="text-sm text-slate-700">
             Описание маркеров и моделей хранится в Obsidian:
           </div>
           <div class="mt-3 flex gap-2 flex-wrap">
             <NuxtLink class="px-3 py-2 rounded-xl border hover:bg-slate-50 text-sm" to="/markers">Маркеры</NuxtLink>
-            <NuxtLink class="px-3 py-2 rounded-xl border hover:bg-slate-50 text-sm" to="/models">Модели</NuxtLink>
+            <NuxtLink class="px-3 py-2 rounded-xl border hover:bg-slate-50 text-sm" to="/models">Модели микроциклов</NuxtLink>
             <NuxtLink class="px-3 py-2 rounded-xl border hover:bg-slate-50 text-sm" to="/regression">Логарифмическая регрессия</NuxtLink>
             <NuxtLink class="px-3 py-2 rounded-xl border hover:bg-slate-50 text-sm" to="/algorithm">Алгоритм размышлений</NuxtLink>
           </div>
@@ -127,9 +202,120 @@
     </section>
 
     <section class="grid gap-6">
+      <UiCard title="Блок: Референсные значения" subtitle="Можно редактировать в Obsidian и/или вручную">
+        <div v-if="referenceLoading" class="text-slate-600 text-sm">Загрузка референсов…</div>
+        <div v-else-if="referenceError" class="rounded-2xl border bg-rose-50 border-rose-100 p-4 text-rose-800">
+          <div class="font-medium">Не удалось загрузить референсы</div>
+          <div class="text-sm mt-2">Проверьте backend на порту 3001 и наличие файла `references.md` в Obsidian.</div>
+        </div>
+        <div v-else class="space-y-4">
+          <div class="text-sm text-slate-700">
+            Источник по умолчанию: <b>Obsidian</b> (`backend/content/notes/references.md`).
+            Здесь можно временно подправить значения через инпуты.
+          </div>
+
+          <div class="grid gap-4 lg:grid-cols-3">
+            <div class="rounded-2xl border p-4">
+              <div class="font-semibold">Креатинин <span class="text-slate-600 font-medium">({{ referenceValues.creatinine.unit }})</span></div>
+              <div class="mt-3 grid grid-cols-3 gap-3">
+                <div class="rounded-xl bg-emerald-50 border border-emerald-100 p-3">
+                  <div class="text-xs text-slate-600">Карточка: Норма</div>
+                  <div class="mt-2 grid grid-cols-2 gap-2">
+                    <input v-model.number="referenceValues.creatinine.normal.min" type="number" step="0.1" class="input h-10" placeholder="min" />
+                    <input v-model.number="referenceValues.creatinine.normal.max" type="number" step="0.1" class="input h-10" placeholder="max" />
+                  </div>
+                </div>
+                <div class="rounded-xl bg-amber-50 border border-amber-100 p-3">
+                  <div class="text-xs text-slate-600">Карточка: Средне</div>
+                  <div class="mt-2 grid grid-cols-2 gap-2">
+                    <input v-model.number="referenceValues.creatinine.medium.min" type="number" step="0.1" class="input h-10" placeholder="min" />
+                    <input v-model.number="referenceValues.creatinine.medium.max" type="number" step="0.1" class="input h-10" placeholder="max" />
+                  </div>
+                </div>
+                <div class="rounded-xl bg-rose-50 border border-rose-100 p-3">
+                  <div class="text-xs text-slate-600">Карточка: Много</div>
+                  <div class="mt-2 grid grid-cols-2 gap-2">
+                    <input v-model.number="referenceValues.creatinine.high.min" type="number" step="0.1" class="input h-10" placeholder="min" />
+                    <input v-model.number="referenceValues.creatinine.high.max" type="number" step="0.1" class="input h-10" placeholder="max" />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="rounded-2xl border p-4">
+              <div class="font-semibold">Белок <span class="text-slate-600 font-medium">({{ referenceValues.protein.unit }})</span></div>
+              <div class="mt-3 grid grid-cols-3 gap-3">
+                <div class="rounded-xl bg-emerald-50 border border-emerald-100 p-3">
+                  <div class="text-xs text-slate-600">Карточка: Норма</div>
+                  <div class="mt-2 grid grid-cols-2 gap-2">
+                    <input v-model.number="referenceValues.protein.normal.min" type="number" step="0.1" class="input h-10" placeholder="min" />
+                    <input v-model.number="referenceValues.protein.normal.max" type="number" step="0.1" class="input h-10" placeholder="max" />
+                  </div>
+                </div>
+                <div class="rounded-xl bg-amber-50 border border-amber-100 p-3">
+                  <div class="text-xs text-slate-600">Карточка: Средне</div>
+                  <div class="mt-2 grid grid-cols-2 gap-2">
+                    <input v-model.number="referenceValues.protein.medium.min" type="number" step="0.1" class="input h-10" placeholder="min" />
+                    <input v-model.number="referenceValues.protein.medium.max" type="number" step="0.1" class="input h-10" placeholder="max" />
+                  </div>
+                </div>
+                <div class="rounded-xl bg-rose-50 border border-rose-100 p-3">
+                  <div class="text-xs text-slate-600">Карточка: Много</div>
+                  <div class="mt-2 grid grid-cols-2 gap-2">
+                    <input v-model.number="referenceValues.protein.high.min" type="number" step="0.1" class="input h-10" placeholder="min" />
+                    <input v-model.number="referenceValues.protein.high.max" type="number" step="0.1" class="input h-10" placeholder="max" />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="rounded-2xl border p-4">
+              <div class="font-semibold">Миоглобин <span class="text-slate-600 font-medium">({{ referenceValues.myoglobin.unit }})</span></div>
+              <div class="mt-3 grid grid-cols-3 gap-3">
+                <div class="rounded-xl bg-emerald-50 border border-emerald-100 p-3">
+                  <div class="text-xs text-slate-600">Карточка: Норма</div>
+                  <div class="mt-2 grid grid-cols-2 gap-2">
+                    <input v-model.number="referenceValues.myoglobin.normal.min" type="number" step="0.1" class="input h-10" placeholder="min" />
+                    <input v-model.number="referenceValues.myoglobin.normal.max" type="number" step="0.1" class="input h-10" placeholder="max" />
+                  </div>
+                </div>
+                <div class="rounded-xl bg-amber-50 border border-amber-100 p-3">
+                  <div class="text-xs text-slate-600">Карточка: Средне</div>
+                  <div class="mt-2 grid grid-cols-2 gap-2">
+                    <input v-model.number="referenceValues.myoglobin.medium.min" type="number" step="0.1" class="input h-10" placeholder="min" />
+                    <input v-model.number="referenceValues.myoglobin.medium.max" type="number" step="0.1" class="input h-10" placeholder="max" />
+                  </div>
+                </div>
+                <div class="rounded-xl bg-rose-50 border border-rose-100 p-3">
+                  <div class="text-xs text-slate-600">Карточка: Много</div>
+                  <div class="mt-2 grid grid-cols-2 gap-2">
+                    <input v-model.number="referenceValues.myoglobin.high.min" type="number" step="0.1" class="input h-10" placeholder="min" />
+                    <input v-model.number="referenceValues.myoglobin.high.max" type="number" step="0.1" class="input h-10" placeholder="max" />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </UiCard>
+
       <div>
         <UiCard title="Ввод данных по неделям" subtitle="Каждая тренировка: V, P, R и маркеры">
-          <div class="space-y-4">
+          <div class="flex items-center justify-between gap-3">
+            <div class="text-sm text-slate-700">
+              Введите данные по тренировкам за недели наблюдения (V/P/R и маркеры).
+            </div>
+            <button
+              type="button"
+              class="h-10 px-3 rounded-xl border font-medium hover:bg-slate-50"
+              @click="weeksInputOpen = !weeksInputOpen"
+            >
+              {{ weeksInputOpen ? 'Свернуть' : 'Развернуть' }}
+            </button>
+          </div>
+
+          <div v-show="weeksInputOpen" class="space-y-4 mt-4">
             <details
               v-for="w in observationWeeks"
               :key="w"
@@ -293,7 +479,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, onMounted, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import UiCard from '~/components/UiCard.vue'
 import Field from '~/components/UiField.vue'
 import Chart from 'chart.js/auto'
@@ -619,6 +805,196 @@ const restBaseline = ref<RestBaseline>({
   protein: null,
   myoglobin: null,
 })
+
+type UploadKind = 'scale' | 'indicator'
+type UploadedImage = { url: string; name: string }
+const scaleImage = ref<UploadedImage | null>(null)
+const indicatorImage = ref<UploadedImage | null>(null)
+const dragOver = ref<{ scale: boolean; indicator: boolean }>({ scale: false, indicator: false })
+const photosOpen = ref<boolean>(true)
+const weeksInputOpen = ref<boolean>(true)
+
+const revokeUrl = (u: string | null | undefined) => {
+  if (!u) return
+  try {
+    URL.revokeObjectURL(u)
+  } catch {
+    // ignore
+  }
+}
+
+const setImage = (kind: UploadKind, file: File) => {
+  if (!file.type.startsWith('image/')) return
+  const url = URL.createObjectURL(file)
+  const payload: UploadedImage = { url, name: file.name }
+  if (kind === 'scale') {
+    revokeUrl(scaleImage.value?.url)
+    scaleImage.value = payload
+  } else {
+    revokeUrl(indicatorImage.value?.url)
+    indicatorImage.value = payload
+  }
+}
+
+const clearImage = (kind: UploadKind) => {
+  if (kind === 'scale') {
+    revokeUrl(scaleImage.value?.url)
+    scaleImage.value = null
+    dragOver.value.scale = false
+  } else {
+    revokeUrl(indicatorImage.value?.url)
+    indicatorImage.value = null
+    dragOver.value.indicator = false
+  }
+}
+
+const onDrop = (kind: UploadKind, e: DragEvent) => {
+  dragOver.value[kind] = false
+  const f = e.dataTransfer?.files?.[0]
+  if (f) setImage(kind, f)
+}
+
+const onFileInput = (kind: UploadKind, e: Event) => {
+  const input = e.target as HTMLInputElement | null
+  const f = input?.files?.[0]
+  if (f) setImage(kind, f)
+  if (input) input.value = ''
+}
+
+onBeforeUnmount(() => {
+  revokeUrl(scaleImage.value?.url)
+  revokeUrl(indicatorImage.value?.url)
+})
+
+const referenceMarkdown = ref<string>('')
+const referenceLoading = ref<boolean>(false)
+const referenceError = ref<boolean>(false)
+
+type RefRange = { min: number | null; max: number | null }
+type MarkerRefs = { unit: string; normal: RefRange; medium: RefRange; high: RefRange }
+type References = Record<MarkerKey, MarkerRefs>
+
+const referenceValues = ref<References>({
+  creatinine: { unit: 'мг/кг', normal: { min: 0.9, max: 3.9 }, medium: { min: 4, max: 8 }, high: { min: 17.7, max: 26.5 } },
+  protein: { unit: 'мг/л', normal: { min: 0.1, max: 1 }, medium: { min: 1.1, max: 2.9 }, high: { min: 3.5, max: 20 } },
+  myoglobin: { unit: 'мкг/л', normal: { min: 0.1, max: 0.9 }, medium: { min: 1, max: 50 }, high: { min: 50.1, max: 250 } },
+})
+
+const parseReferencesMarkdown = (md: string): Partial<References> => {
+  const out: Partial<References> = {}
+  const lines = md.split(/\r?\n/)
+  let current: MarkerKey | null = null
+
+  const pickMarker = (s: string): MarkerKey | null => {
+    const t = s.toLowerCase()
+    if (t.includes('креатинин')) return 'creatinine'
+    if (t.includes('белок')) return 'protein'
+    if (t.includes('миоглобин')) return 'myoglobin'
+    return null
+  }
+
+  const parseRange = (s: string): RefRange => {
+    const cleaned = s.replace(',', '.')
+    const m = cleaned.match(/(\d+(?:\.\d+)?)\s*[–-]\s*(\d+(?:\.\d+)?)/)
+    if (!m) return { min: null, max: null }
+    return { min: Number(m[1]), max: Number(m[2]) }
+  }
+
+  const parseUnit = (s: string): string | null => {
+    const m = s.match(/\(([^)]+)\)/)
+    return m ? m[1].trim() : null
+  }
+
+  for (const line of lines) {
+    const h = line.match(/^##\s+(.+)$/)
+    if (h) {
+      const mk = pickMarker(h[1])
+      if (mk) {
+        current = mk
+        const unit = parseUnit(h[1])
+        out[mk] = out[mk] || (referenceValues.value[mk] ? { ...referenceValues.value[mk] } : ({} as any))
+        if (unit) (out[mk] as MarkerRefs).unit = unit
+      } else {
+        current = null
+      }
+      continue
+    }
+
+    if (!current) continue
+    // table row: | Норма | 0.9–3.9 |
+    const row = line.split('|').map((x) => x.trim()).filter(Boolean)
+    if (row.length >= 2) {
+      const zone = row[0].toLowerCase()
+      const rangeText = row[1]
+      const r = parseRange(rangeText)
+      if (!out[current]) continue
+      const target = out[current] as MarkerRefs
+      if (zone.includes('норм')) target.normal = r
+      else if (zone.includes('сред')) target.medium = r
+      else if (zone.includes('много')) target.high = r
+    }
+  }
+  return out
+}
+
+const lastObsidianReferences = ref<References | null>(null)
+
+const mergeMarker = (base: MarkerRefs, patch?: Partial<MarkerRefs>): MarkerRefs => {
+  if (!patch) return { ...base }
+  return {
+    unit: patch.unit ?? base.unit,
+    normal: patch.normal ?? base.normal,
+    medium: patch.medium ?? base.medium,
+    high: patch.high ?? base.high,
+  }
+}
+
+/**
+ * Автоприменение референсов из Obsidian, но без перезаписи ручных правок.
+ * Правило: если текущее значение равно прошлому Obsidian — значит его не меняли вручную, можно обновить.
+ */
+const mergeReferencesFromObsidian = (parsed: Partial<References>) => {
+  const current = referenceValues.value
+  const nextObsidian: References = {
+    creatinine: mergeMarker(current.creatinine, parsed.creatinine),
+    protein: mergeMarker(current.protein, parsed.protein),
+    myoglobin: mergeMarker(current.myoglobin, parsed.myoglobin),
+  }
+
+  const prevObs = lastObsidianReferences.value
+  if (!prevObs) {
+    referenceValues.value = nextObsidian
+    lastObsidianReferences.value = nextObsidian
+    return
+  }
+
+  const updateIfNotOverridden = (path: { marker: MarkerKey; zone: keyof Omit<MarkerRefs, 'unit'>; bound: keyof RefRange }) => {
+    const m = path.marker
+    const z = path.zone
+    const b = path.bound
+    const cur = current[m][z][b]
+    const prev = prevObs[m][z][b]
+    const nxt = nextObsidian[m][z][b]
+    if (Object.is(cur, prev)) {
+      ;(current[m][z][b] as number | null) = nxt
+    }
+  }
+
+  // units
+  for (const m of ['creatinine', 'protein', 'myoglobin'] as const) {
+    if (current[m].unit === prevObs[m].unit) current[m].unit = nextObsidian[m].unit
+  }
+
+  // ranges
+  for (const m of ['creatinine', 'protein', 'myoglobin'] as const) {
+    for (const z of ['normal', 'medium', 'high'] as const) {
+      updateIfNotOverridden({ marker: m, zone: z, bound: 'min' })
+      updateIfNotOverridden({ marker: m, zone: z, bound: 'max' })
+    }
+  }
+
+  lastObsidianReferences.value = nextObsidian
+}
 
 const ensureRows = () => {
   const next: Record<string, Row> = { ...rows.value }
@@ -973,6 +1349,8 @@ const resetAll = () => {
   ensureRows()
   plans.value = {}
   restBaseline.value = { creatinine: null, protein: null, myoglobin: null }
+  clearImage('scale')
+  clearImage('indicator')
   if (chartV) chartV.destroy()
   if (chartP) chartP.destroy()
   if (chartR) chartR.destroy()
@@ -1086,6 +1464,23 @@ onMounted(() => {
   ensureRows()
   expandedWeeks.value = Array.from({ length: observationWeeks.value }, (_, i) => i + 1)
 })
+
+onMounted(async () => {
+  referenceLoading.value = true
+  referenceError.value = false
+  try {
+    const res = await fetch('http://localhost:3001/content/references')
+    if (!res.ok) throw new Error(`HTTP ${res.status}`)
+    referenceMarkdown.value = await res.text()
+    mergeReferencesFromObsidian(parseReferencesMarkdown(referenceMarkdown.value))
+  } catch (e) {
+    referenceError.value = true
+    // eslint-disable-next-line no-console
+    console.error('Failed to load references content:', e)
+  } finally {
+    referenceLoading.value = false
+  }
+})
 </script>
 
 <style scoped>
@@ -1095,6 +1490,10 @@ onMounted(() => {
     flex-direction: column !important;
     gap: 1.25rem !important;
   }
+}
+.markdown-content {
+  max-width: 900px;
+  margin: 0 auto;
 }
 .input {
   width: 100%;
@@ -1107,5 +1506,43 @@ onMounted(() => {
 .input:focus {
   box-shadow: 0 0 0 3px rgba(148, 163, 184, 0.45);
   border-color: #cbd5e1;
+}
+
+.dropzone {
+  position: relative;
+  border: 1px dashed #cbd5e1;
+  border-radius: 16px;
+  background: #f8fafc;
+  padding: 14px;
+  transition: box-shadow 0.15s, border-color 0.15s, background 0.15s;
+}
+.dropzone.is-over {
+  border-color: #64748b;
+  box-shadow: 0 0 0 3px rgba(148, 163, 184, 0.35);
+  background: #f1f5f9;
+}
+.dropzone-input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+}
+.dropzone-inner {
+  pointer-events: none;
+}
+.dropzone-preview img {
+  pointer-events: none;
+  display: block;
+  width: 100%;
+  max-height: 220px;
+  object-fit: contain;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  background: #fff;
+}
+.dropzone-preview button {
+  pointer-events: auto;
 }
 </style>
